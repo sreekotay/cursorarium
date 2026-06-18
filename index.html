@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Cursorarium v1</title>
+<title>Cursorarium v2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -139,10 +139,10 @@
       <div id="vcursor" class="mode-normal">
         <div class="arrow">
           <svg class="arrow-svg win" width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">
-            <g transform="scale(1.12)"><path d="M0 0 L0 18 L4.5 13.7 L7.6 20.6 L10.2 19.4 L7.1 12.6 L13.2 12.6 Z" fill="#f7f7f7" stroke="#1a1a1a" stroke-width="1.4" stroke-linejoin="round"/></g>
+            <g transform="scale(0.9)"><path d="M0 0 L0 18 L4.5 13.7 L7.6 20.6 L10.2 19.4 L7.1 12.6 L13.2 12.6 Z" fill="#f7f7f7" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="round"/></g>
           </svg>
           <svg class="arrow-svg mac" width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">
-            <g transform="rotate(-5) scale(1)"><path d="M0 0 L0 16.6 L3.9 13.1 L6.2 18.8 L8.2 17.9 L6 12.4 L11 12.4 Z" fill="#111" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></g>
+            <g transform="rotate(-5) scale(0.88)"><path d="M0 0 L0 16.6 L3.9 13.1 L6.2 18.8 L8.2 17.9 L6 12.4 L11 12.4 Z" fill="#111" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></g>
           </svg>
         </div>
         <div class="spark">
@@ -282,13 +282,21 @@
   window.addEventListener("pointermove", (e) => {
     const p = localPos(e); mx=p.x; my=p.y;
     inside = mx>=0 && my>=0 && mx<=W && my<=H;
-    if (inside){ moveCursor(); showCursor(); } else if (!down){ hideCursor(); }
+    if (!inside && down){ dropOutside(e); return; }   // dragged past the edge -> hand back to the OS cursor
+    if (inside){ moveCursor(); showCursor(); } else { hideCursor(); }
     if (grabbed){
       grabbed.x = Math.max(grabbed.r, Math.min(W-grabbed.r, mx+grabDX));
       grabbed.y = Math.max(grabbed.r, Math.min(H-grabbed.r, my+grabDY));
     }
     if (cursorMode === "fun" && inside) spawnDot(mx,my);
   });
+
+  function dropOutside(e){
+    try{ cv.releasePointerCapture(e.pointerId); }catch(_){}
+    down=false; vcursor.classList.remove("down");
+    if (grabbed){ grabbed.held=false; grabbed=null; }   // let go of the jelly (keeps its fling velocity)
+    inside=false; hideCursor();
+  }
 
   function release(e){
     if (e){ try{ cv.releasePointerCapture(e.pointerId);}catch(_){} }
