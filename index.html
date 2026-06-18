@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Cursorarium v2</title>
+<title>Cursorarium v3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -73,12 +73,11 @@
       radial-gradient(120% 90% at 30% 0%, rgba(110,231,216,.08), transparent 60%),
       radial-gradient(120% 100% at 80% 110%, rgba(255,179,71,.07), transparent 60%),
       linear-gradient(160deg, #211e31 0%, #15131f 100%);
-    border:1px solid rgba(255,255,255,.08);
-    box-shadow:inset 0 2px 30px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.02), 0 40px 90px -50px rgba(0,0,0,.9);
-    overflow:hidden; cursor:none; touch-action:none;
+    box-shadow:inset 0 2px 30px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.10), 0 40px 90px -50px rgba(0,0,0,.9);
+    overflow:hidden;
   }
   .tank::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(180deg, rgba(255,255,255,.05), transparent 18%);}
-  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;}
 
   /* ---- Virtual cursor (DOM overlay) ---- */
   #vcursor{position:absolute;left:0;top:0;z-index:10;pointer-events:none;opacity:0;transition:opacity .1s;will-change:transform;}
@@ -139,10 +138,10 @@
       <div id="vcursor" class="mode-normal">
         <div class="arrow">
           <svg class="arrow-svg win" width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">
-            <g transform="scale(0.9)"><path d="M0 0 L0 18 L4.5 13.7 L7.6 20.6 L10.2 19.4 L7.1 12.6 L13.2 12.6 Z" fill="#f7f7f7" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="round"/></g>
+            <g transform="scale(1)"><path d="M0 0 L0 18 L4.5 13.7 L7.6 20.6 L10.2 19.4 L7.1 12.6 L13.2 12.6 Z" fill="#f7f7f7" stroke="#1a1a1a" stroke-width="1.4" stroke-linejoin="round"/></g>
           </svg>
           <svg class="arrow-svg mac" width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">
-            <g transform="rotate(-5) scale(0.88)"><path d="M0 0 L0 16.6 L3.9 13.1 L6.2 18.8 L8.2 17.9 L6 12.4 L11 12.4 Z" fill="#111" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></g>
+            <g transform="rotate(-5) scale(0.99)"><path d="M0 0 L0 16.6 L3.9 13.1 L6.2 18.8 L8.2 17.9 L6 12.4 L11 12.4 Z" fill="#111" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></g>
           </svg>
         </div>
         <div class="spark">
@@ -243,8 +242,10 @@
 
   function localPos(e){ const r=cv.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
   function moveCursor(){ vcursor.style.transform = `translate(${mx}px, ${my}px)`; }
-  function showCursor(){ vcursor.style.opacity = "1"; }
-  function hideCursor(){ vcursor.style.opacity = "0"; }
+  let nativeHidden=false;
+  function hideNative(h){ if(h===nativeHidden) return; nativeHidden=h; cv.style.cursor = h ? "none" : ""; }
+  function showCursor(){ vcursor.style.opacity = "1"; hideNative(true); }
+  function hideCursor(){ vcursor.style.opacity = "0"; hideNative(false); }
 
   function spawnDot(x,y){
     if (reduceMotion) return;
@@ -262,7 +263,7 @@
   }
   function clearDots(){ tank.querySelectorAll(".trail-dot").forEach(d => d.remove()); }
 
-  cv.addEventListener("pointerenter", () => { inside = true; moveCursor(); showCursor(); });
+  cv.addEventListener("pointerenter", (e) => { const p=localPos(e); mx=p.x; my=p.y; inside=true; moveCursor(); showCursor(); });
   cv.addEventListener("pointerleave", () => { if (!down){ inside = false; hideCursor(); } });
 
   cv.addEventListener("pointerdown", (e) => {
