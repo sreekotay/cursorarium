@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Cursorarium v3</title>
+<title>Cursorarium v4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -282,7 +282,8 @@
 
   window.addEventListener("pointermove", (e) => {
     const p = localPos(e); mx=p.x; my=p.y;
-    inside = mx>=0 && my>=0 && mx<=W && my<=H;
+    const overCanvas = down || e.target === cv;          // toolbar overlaps the tank; only the canvas counts
+    inside = overCanvas && mx>=0 && my>=0 && mx<=W && my<=H;
     if (!inside && down){ dropOutside(e); return; }   // dragged past the edge -> hand back to the OS cursor
     if (inside){ moveCursor(); showCursor(); } else { hideCursor(); }
     if (grabbed){
@@ -303,9 +304,11 @@
     if (e){ try{ cv.releasePointerCapture(e.pointerId);}catch(_){} }
     down = false; vcursor.classList.remove("down");
     if (grabbed){ grabbed.held=false; grabbed=null; }
-    if (e){ const r=cv.getBoundingClientRect();
-      inside = e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom;
-      if (!inside) hideCursor();
+    if (e){
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const p = localPos(e); mx=p.x; my=p.y;
+      inside = el === cv && mx>=0 && my>=0 && mx<=W && my<=H;
+      if (inside){ moveCursor(); showCursor(); } else hideCursor();
     }
   }
   window.addEventListener("pointerup", release);
